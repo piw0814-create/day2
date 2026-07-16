@@ -1,13 +1,22 @@
+# 환경변수
 .env
+.env.*
+
+# 가상환경
 .venv/
 venv/
+
+# Python 캐시
 __pycache__/
 *.pyc
+
+# 테스트 및 린터 캐시
 .pytest_cache/
 .ruff_cache/
+.coverage
 
 # API 응답 및 원본 데이터
 data/raw/
-*.csv
-*.json
-*.parquet
+
+# macOS
+.DS_Store

@@ -1,0 +1,35 @@
+data:
+  url: "https://archive.ics.uci.edu/ml/machine-learning-databases/adult/adult.data"
+  raw_path: "data/raw/adult.data"
+  processed_path: "data/processed/adult_processed.csv"
+
+columns:
+  numeric:
+    - age
+    - fnlwgt
+    - education-num
+    - capital-gain
+    - capital-loss
+    - hours-per-week
+
+  categorical:
+    - workclass
+    - education
+    - marital-status
+    - occupation
+    - relationship
+    - race
+    - sex
+    - native-country
+
+  target: income
+
+model:
+  test_size: 0.2
+  random_state: 42
+  n_estimators: 100
+
+paths:
+  model: "models/adult_income_pipeline.joblib"
+  report: "reports/report.md"
+  figures: "reports/figures"

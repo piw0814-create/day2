@@ -23,7 +23,12 @@ def create_visualizations(
 
     # 전체 데이터의 나이 분포를 Seaborn 정적 차트로 표현한다.
     plt.figure(figsize=(10, 6))
-    sns.histplot(data=df, x="age", bins=30, kde=True)
+    sns.histplot(
+        data=df,
+        x="age",
+        bins=30,
+        kde=True,
+    )
 
     plt.title("Adult Census Income - Age Distribution")
     plt.xlabel("Age")
@@ -37,7 +42,9 @@ def create_visualizations(
         df,
         x="income",
         y="hours-per-week",
-        category_orders={"income": ["<=50K", ">50K"]},
+        category_orders={
+            "income": ["<=50K", ">50K"],
+        },
         title="Hours per Week by Income Group",
         labels={
             "income": "Income Group",
@@ -45,8 +52,13 @@ def create_visualizations(
         },
     )
 
-    boxplot.write_html(income_hours_path)
+    # 고정된 div_id를 사용해 실행할 때마다 HTML 내용이 달라지는 것을 방지한다.
+    boxplot.write_html(
+        income_hours_path,
+        div_id="income-hours-boxplot",
+    )
 
+    # 생성된 시각화 파일의 경로를 호출한 코드에 반환한다.
     return {
         "age_chart": str(age_chart_path),
         "income_hours_chart": str(income_hours_path),
@@ -55,7 +67,9 @@ def create_visualizations(
 
 if __name__ == "__main__":
     config = load_config()
-    processed_df = pd.read_csv(config["data"]["processed_path"])
+    processed_df = pd.read_csv(
+        config["data"]["processed_path"],
+    )
 
     saved_paths = create_visualizations(
         processed_df,

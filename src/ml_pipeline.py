@@ -5,6 +5,7 @@ from pathlib import Path
 import joblib
 import pandas as pd
 from sklearn.compose import ColumnTransformer
+from sklearn.dummy import DummyClassifier
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.impute import SimpleImputer
 from sklearn.metrics import (
@@ -45,6 +46,42 @@ def train_model(
         test_size=test_size,
         random_state=random_state,
         stratify=y,
+    )
+
+    # 학습 데이터에서 가장 많은 클래스로만 예측하는 기준 모델이다.
+    # 복잡한 모델이 단순 예측보다 실제로 나은지 비교하기 위해 사용한다.
+    baseline_model = DummyClassifier(
+        strategy="most_frequent",
+    )
+
+    baseline_model.fit(X_train, y_train)
+    baseline_predictions = baseline_model.predict(X_test)
+
+    baseline_class = str(
+        y_train.value_counts().idxmax()
+    )
+
+    baseline_accuracy = accuracy_score(
+        y_test,
+        baseline_predictions,
+    )
+    baseline_precision = precision_score(
+        y_test,
+        baseline_predictions,
+        pos_label=">50K",
+        zero_division=0,
+    )
+    baseline_recall = recall_score(
+        y_test,
+        baseline_predictions,
+        pos_label=">50K",
+        zero_division=0,
+    )
+    baseline_f1 = f1_score(
+        y_test,
+        baseline_predictions,
+        pos_label=">50K",
+        zero_division=0,
     )
 
     # 수치형 결측치는 중앙값으로 대체한다.
@@ -90,27 +127,52 @@ def train_model(
     model_pipeline.fit(X_train, y_train)
     predictions = model_pipeline.predict(X_test)
 
+    model_accuracy = accuracy_score(
+        y_test,
+        predictions,
+    )
+    model_precision = precision_score(
+        y_test,
+        predictions,
+        pos_label=">50K",
+        zero_division=0,
+    )
+    model_recall = recall_score(
+        y_test,
+        predictions,
+        pos_label=">50K",
+        zero_division=0,
+    )
+    model_f1 = f1_score(
+        y_test,
+        predictions,
+        pos_label=">50K",
+        zero_division=0,
+    )
+
     metrics = {
-        "accuracy": accuracy_score(y_test, predictions),
-        "precision": precision_score(
+        "accuracy": model_accuracy,
+        "precision": model_precision,
+        "recall": model_recall,
+        "f1": model_f1,
+        "confusion_matrix": confusion_matrix(
             y_test,
             predictions,
-            pos_label=">50K",
-        ),
-        "recall": recall_score(
-            y_test,
-            predictions,
-            pos_label=">50K",
-        ),
-        "f1": f1_score(
-            y_test,
-            predictions,
-            pos_label=">50K",
-        ),
-        "confusion_matrix": confusion_matrix(y_test, predictions).tolist(),
+        ).tolist(),
         "classification_report": classification_report(
             y_test,
             predictions,
+        ),
+        "baseline": {
+            "strategy": "most_frequent",
+            "predicted_class": baseline_class,
+            "accuracy": baseline_accuracy,
+            "precision": baseline_precision,
+            "recall": baseline_recall,
+            "f1": baseline_f1,
+        },
+        "accuracy_improvement": (
+            model_accuracy - baseline_accuracy
         ),
         "train_size": len(X_train),
         "test_size": len(X_test),
@@ -155,3 +217,34 @@ if __name__ == "__main__":
     print(results["classification_report"])
 
     print(f"모델 저장 위치: {results['model_path']}")
+
+    baseline = results["baseline"]
+
+    print("\n[다수 클래스 베이스라인]")
+    print(
+        "예측 클래스: "
+        f"{baseline['predicted_class']}"
+    )
+    print(
+        "Baseline Accuracy: "
+        f"{baseline['accuracy']:.4f}"
+    )
+    print(
+        "Baseline Precision: "
+        f"{baseline['precision']:.4f}"
+    )
+    print(
+        "Baseline Recall: "
+        f"{baseline['recall']:.4f}"
+    )
+    print(
+        "Baseline F1-score: "
+        f"{baseline['f1']:.4f}"
+    )
+
+    print("\n[RandomForest와 베이스라인 비교]")
+    print(
+        "Accuracy 개선폭: "
+        f"{results['accuracy_improvement']:.4f} "
+        f"({results['accuracy_improvement'] * 100:.2f}%p)"
+    )
